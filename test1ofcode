@@ -1,0 +1,50 @@
+import requests
+
+def get_nutritional_info(ingredient):
+    api_url = f"https://api.nal.usda.gov/fdc/v1/foods/search?query={ingredient}&api_key=c0bKMkiGwmaFYSzz69Vwpi2mb0RhvS1kosvmgX86"
+    response = requests.get(api_url)
+    data = response.json()
+    if data['foods']:
+        # Assuming the first item is the best match
+        food_id = data['foods'][0]['fdcId']
+        food_nutrients = data['foods'][0]['foodNutrients']
+        nutrients = {}
+        for nutrient in food_nutrients:
+            nutrients[nutrient['nutrientName']] = nutrient['value']
+        return nutrients
+    else:
+        return None
+
+def calculate_nutritional_content(recipe):
+    total_nutrients = {
+        'Energy': 0,
+        'Protein': 0,
+        'Fat': 0,
+        'Carbohydrate': 0,
+        # Add more nutrients as needed
+    }
+    for ingredient, quantity in recipe.items():
+        nutritional_info = get_nutritional_info(ingredient)
+        if nutritional_info:
+            for nutrient, value in nutritional_info.items():
+                if nutrient in total_nutrients:
+                    total_nutrients[nutrient] += value * quantity
+    return total_nutrients
+
+def main():
+    recipe = {}
+    while True:
+        ingredient = input("Enter ingredient name (or 'done' to finish): ").lower()
+        if ingredient == 'done':
+            break
+        quantity = float(input("Enter quantity (in grams): "))
+        recipe[ingredient] = quantity
+
+    total_nutrients = calculate_nutritional_content(recipe)
+
+    print("\nTotal Nutritional Content of the Recipe:")
+    for nutrient, value in total_nutrients.items():
+        print(f"{nutrient}: {value:.2f} g")
+
+if __name__ == "__main__":
+    main()
